@@ -99,16 +99,15 @@ class _MyHomePageState extends State<MyHomePage> {
     }).toList();
   }
 
-  void newTransactionAdded(String title, double amount) {
-    final newTransaction = Transaction(
-      id: DateTime.now().toString(),
-      title: title,
-      amount: amount,
-      date: DateTime.now(),
-    );
-
+  void _existingTrasactionDeleted(String id) {
     setState(() {
-      _transactions.add(newTransaction);
+      _transactions.removeWhere((transaction) => transaction.id == id);
+    });
+  }
+
+  void _newTransactionAdded(Transaction transaction) {
+    setState(() {
+      _transactions.add(transaction);
     });
   }
 
@@ -116,7 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
     showModalBottomSheet(
         context: context,
         builder: (_) {
-          return TransactionAdd(newTransactionAdded);
+          return TransactionAdd(_newTransactionAdded);
         });
   }
 
@@ -157,7 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_transactions.isEmpty) {
       return _transactionsEmptyView();
     } else {
-      return TransactionList(_transactions);
+      return TransactionList(_transactions, _existingTrasactionDeleted);
     }
   }
 

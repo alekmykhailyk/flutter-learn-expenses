@@ -1,32 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:widgets_00/models/transaction_being_added.dart';
 
 class TransactionAdd extends StatefulWidget {
-  final Function newTransactionCallback;
-  TransactionAdd(this.newTransactionCallback, {super.key});
+  final Function _transactionAddedCallback;
+
+  TransactionAdd(this._transactionAddedCallback, {super.key});
 
   @override
   State<TransactionAdd> createState() => _TransactionAddState();
 }
 
 class _TransactionAddState extends State<TransactionAdd> {
-  final titleController = TextEditingController();
-
-  final amountController = TextEditingController();
+  var transactionBeingAdded = TransactionBeingAdded(
+    titleController: TextEditingController(),
+    amountController: TextEditingController(),
+  );
 
   void newTransactionAdded() {
-    final title = titleController.text;
-    final amount = double.parse(amountController.text);
-
-    if (title.isEmpty || amount < 0) {
+    if (!transactionBeingAdded.isValid()) {
       return;
     }
 
-    widget.newTransactionCallback(
-      title,
-      amount,
-    );
+    widget._transactionAddedCallback(
+        transactionBeingAdded.generateNewTransaction());
 
     Navigator.of(context).pop();
+  }
+
+  void presentDatePicker() {
+    (showDatePicker(
+      context: context,
+      initialDate: transactionBeingAdded.date ?? DateTime.now(),
+      firstDate: DateTime(2021),
+      lastDate: DateTime.now(),
+    )).then((date) {
+      transactionBeingAdded = transactionBeingAdded.generateNewItself(date);
+    });
   }
 
   @override
@@ -42,7 +52,7 @@ class _TransactionAddState extends State<TransactionAdd> {
               decoration: const InputDecoration(
                 labelText: 'Title',
               ),
-              controller: titleController,
+              controller: transactionBeingAdded.titleController,
               onSubmitted: (_) => newTransactionAdded(),
             ),
             TextField(
@@ -50,10 +60,33 @@ class _TransactionAddState extends State<TransactionAdd> {
                 labelText: 'Amount',
               ),
               keyboardType: TextInputType.number,
-              controller: amountController,
+              controller: transactionBeingAdded.amountController,
               onSubmitted: (_) => newTransactionAdded(),
             ),
-            TextButton(
+            Container(
+              height: 70,
+              child: Row(
+                children: [
+                  Flexible(
+                    fit: FlexFit.tight,
+                    child: Text(
+                      transactionBeingAdded.date == null
+                          ? 'No date chosen'
+                          : DateFormat.yMMMd()
+                              .format(transactionBeingAdded.date as DateTime),
+                    ),
+                  ),
+                  TextButton(
+                    child: Text(
+                      'Choose Date',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: presentDatePicker,
+                  )
+                ],
+              ),
+            ),
+            ElevatedButton(
               child: Text('Submit'),
               onPressed: newTransactionAdded,
             )
